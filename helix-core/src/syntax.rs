@@ -334,6 +334,8 @@ pub enum LanguageServerFeature {
     Diagnostics,
     RenameSymbol,
     InlayHints,
+    // Experimental
+    ParentModule,
 }
 
 impl Display for LanguageServerFeature {
@@ -357,6 +359,7 @@ impl Display for LanguageServerFeature {
             Diagnostics => "diagnostics",
             RenameSymbol => "rename-symbol",
             InlayHints => "inlay-hints",
+            ParentModule => "parent-module",
         };
         write!(f, "{feature}",)
     }

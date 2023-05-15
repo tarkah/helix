@@ -1398,3 +1398,22 @@ fn compute_inlay_hints_for_view(
 
     Some(callback)
 }
+
+pub fn goto_parent_module(cx: &mut Context) {
+    let (view, doc) = current!(cx.editor);
+    let language_server =
+        language_server_with_feature!(cx.editor, doc, LanguageServerFeature::ParentModule);
+    let offset_encoding = language_server.offset_encoding();
+
+    let pos = doc.position(view.id, offset_encoding);
+
+    if let Some(future) = language_server.parent_module(doc.identifier(), pos) {
+        cx.callback(
+            future,
+            move |editor, compositor, response: Option<lsp::GotoDefinitionResponse>| {
+                let items = to_locations(response);
+                goto_impl(editor, compositor, items, offset_encoding);
+            },
+        )
+    }
+}
