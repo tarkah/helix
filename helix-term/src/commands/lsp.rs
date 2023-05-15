@@ -1443,3 +1443,11 @@ fn compute_inlay_hints_for_view(
 
     Some(callback)
 }
+
+pub fn goto_parent_module(cx: &mut Context) {
+    goto_single_impl(
+        cx,
+        LanguageServerFeature::ParentModule,
+        |ls, pos, doc_id| ls.parent_module(doc_id, pos),
+    );
+}

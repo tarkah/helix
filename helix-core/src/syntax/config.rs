@@ -268,6 +268,7 @@ pub enum LanguageServerFeature {
     RenameSymbol,
     InlayHints,
     DocumentColors,
+    ParentModule,
 }
 
 impl Display for LanguageServerFeature {
@@ -292,6 +293,7 @@ impl Display for LanguageServerFeature {
             RenameSymbol => "rename-symbol",
             InlayHints => "inlay-hints",
             DocumentColors => "document-colors",
+            ParentModule => "parent-module",
         };
         write!(f, "{feature}",)
     }
