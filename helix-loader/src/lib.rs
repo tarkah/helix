@@ -165,7 +165,11 @@ pub fn default_log_file() -> PathBuf {
 /// documents that use a top-level array of values like the `languages.toml`,
 /// where one usually wants to override or add to the array instead of
 /// replacing it altogether.
-pub fn merge_toml_values(left: toml::Value, right: toml::Value, merge_depth: usize) -> toml::Value {
+pub fn merge_toml_values(
+    left: toml::Value,
+    right: toml::Value,
+    array_merge_depth: usize,
+) -> toml::Value {
     use toml::Value;
 
     fn get_name(v: &Value) -> Option<&str> {
@@ -179,7 +183,7 @@ pub fn merge_toml_values(left: toml::Value, right: toml::Value, merge_depth: usi
             // that you can specify a sub-set of languages in an overriding
             // `languages.toml` but that nested arrays like Language Server
             // arguments are replaced instead of merged.
-            if merge_depth > 0 {
+            if array_merge_depth > 0 {
                 left_items.reserve(right_items.len());
                 for rvalue in right_items {
                     let lvalue = get_name(&rvalue)
@@ -188,7 +192,7 @@ pub fn merge_toml_values(left: toml::Value, right: toml::Value, merge_depth: usi
                         })
                         .map(|lpos| left_items.remove(lpos));
                     let mvalue = match lvalue {
-                        Some(lvalue) => merge_toml_values(lvalue, rvalue, merge_depth - 1),
+                        Some(lvalue) => merge_toml_values(lvalue, rvalue, array_merge_depth - 1),
                         None => rvalue,
                     };
                     left_items.push(mvalue);
@@ -199,22 +203,18 @@ pub fn merge_toml_values(left: toml::Value, right: toml::Value, merge_depth: usi
             }
         }
         (Value::Table(mut left_map), Value::Table(right_map)) => {
-            if merge_depth > 0 {
-                for (rname, rvalue) in right_map {
-                    match left_map.remove(&rname) {
-                        Some(lvalue) => {
-                            let merged_value = merge_toml_values(lvalue, rvalue, merge_depth - 1);
-                            left_map.insert(rname, merged_value);
-                        }
-                        None => {
-                            left_map.insert(rname, rvalue);
-                        }
+            for (rname, rvalue) in right_map {
+                match left_map.remove(&rname) {
+                    Some(lvalue) => {
+                        let merged_value = merge_toml_values(lvalue, rvalue, array_merge_depth - 1);
+                        left_map.insert(rname, merged_value);
+                    }
+                    None => {
+                        left_map.insert(rname, rvalue);
                     }
                 }
-                Value::Table(left_map)
-            } else {
-                Value::Table(right_map)
             }
+            Value::Table(left_map)
         }
         // Catch everything else we didn't handle, and use the right value
         (_, value) => value,
